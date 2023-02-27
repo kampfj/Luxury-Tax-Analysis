@@ -56,33 +56,38 @@ get_tax_bill <- function(overage, repeater) {
   }
   sum <- sum + get_incremental_maximum(repeater, 4999999)
   if (overage <= 9999999) {
-    diff <- overage - 4999999
+    diff <- overage - 5000000
     tax_dollars <- get_rate(repeater, overage)*diff
     return(sum + tax_dollars)
   }
   sum <- sum + get_incremental_maximum(repeater, 9999999)
   if (overage <= 14999999) {
-    diff <- overage - 9999999
+    diff <- overage - 10000000
     tax_dollars <- get_rate(repeater, overage)*diff
     return(sum + tax_dollars)
   }
   sum <- sum + get_incremental_maximum(repeater, 14999999)
   if (overage <= 19999999) {
-    diff <- overage - 14999999
+    diff <- overage - 15000000
     tax_dollars <- get_rate(repeater, overage)*diff
     return(sum + tax_dollars)
   }
   sum <- sum + get_incremental_maximum(repeater, 19999999)
-  diff <- overage - 19999999
+  diff <- overage - 20000000
   return(sum + get_rate(repeater, overage)*diff)
 }
 
 # Look at repeater tax bills vs non repeat offenders.
-plot_repeater_vs_not <- function() {
+get_repeater_vs_not <- function() {
   overages <- seq(1,40)*1000000
   repeater_tax_bill <-sapply(overages, FUN=get_tax_bill,repeater=TRUE)
   non_repeater_tax_bill <- sapply(overages, FUN=get_tax_bill,repeater=FALSE)
-  df <- data.frame(overages, repeater=repeater_tax_bill, non_repeater=non_repeater_tax_bill)
+  df <- data.frame(overages, repeater_tax_bill, non_repeater_tax_bill)
+  return(df)
+}
+
+plot_repeater_vs_not_bills <- function() {
+  df <- get_repeater_vs_not()
   df %>% ggplot() + 
     geom_line(aes(x = overages, y = repeater_tax_bill), color = "red") +
     geom_line(aes(x = overages, y = non_repeater_tax_bill), color = "blue") +
@@ -90,6 +95,29 @@ plot_repeater_vs_not <- function() {
       x = "Dollars over tax threshold", 
       y = "Tax Bill",
       title = "Tax Accounting for Repeat vs Non-Repeat Offenders", 
+      subtitle = "Luxury tax bills for teams based on severity of tax violation (in dollars)",
+      caption = "Calculation logic from CBAFAQ.com"
+    ) +
+    scale_y_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) + # millions
+    scale_x_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) +
+    theme_bw() + 
+    theme(
+      plot.margin = unit(c(1, 1, 3, 1), "lines"), 
+      plot.caption = element_text(vjust = -15),
+      axis.title.x = element_text(vjust=-3)
+    )
+}
+
+plot_repeater_vs_not_deltas <- function() {
+  df <- get_repeater_vs_not()
+  df$delta = df$repeater_tax_bill - df$non_repeater_tax_bill
+  df %>% ggplot() + 
+    geom_line(aes(x = overages, y = delta), color = "red") +
+    labs(
+      x = "Dollars over tax threshold", 
+      y = "Repeater vs Non-Repeater Delta",
+      title = "Tax Accounting for Repeat vs Non-Repeat Offenders", 
+      subtitle = "Difference in tax bills between repeat/non-repeat offenders based on severity of tax violation (in dollars)",
       caption = "Calculation logic from CBAFAQ.com"
     ) +
     scale_y_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) + # millions
