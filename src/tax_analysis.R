@@ -96,7 +96,7 @@ plot_repeater_vs_not_bills <- function() {
       y = "Tax Bill",
       title = "Tax Accounting for Repeat vs Non-Repeat Offenders", 
       subtitle = "Luxury tax bills for teams based on severity of tax violation (in dollars)",
-      caption = "Calculation logic from CBAFAQ.com"
+      caption = "Calculation logic from CBAFAQ.com. Visualization by JJ Kampf."
     ) +
     scale_y_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) + # millions
     scale_x_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) +
@@ -104,7 +104,8 @@ plot_repeater_vs_not_bills <- function() {
     theme(
       plot.margin = unit(c(1, 1, 3, 1), "lines"), 
       plot.caption = element_text(vjust = -15),
-      axis.title.x = element_text(vjust=-3)
+      axis.title.x = element_text(vjust=-3),
+      axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))
     )
 }
 
@@ -115,10 +116,9 @@ plot_repeater_vs_not_deltas <- function() {
     geom_line(aes(x = overages, y = delta), color = "red") +
     labs(
       x = "Dollars over tax threshold", 
-      y = "Repeater vs Non-Repeater Delta",
-      title = "Tax Accounting for Repeat vs Non-Repeat Offenders", 
-      subtitle = "Difference in tax bills between repeat/non-repeat offenders based on severity of tax violation (in dollars)",
-      caption = "Calculation logic from CBAFAQ.com"
+      y = "Delta",
+      title = "Penalty for being a repeater scales linearly with dollars spent", 
+      caption = "Calculation logic from CBAFAQ.com. Visualization by JJ Kampf."
     ) +
     scale_y_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) + # millions
     scale_x_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) +
@@ -126,7 +126,8 @@ plot_repeater_vs_not_deltas <- function() {
     theme(
       plot.margin = unit(c(1, 1, 3, 1), "lines"), 
       plot.caption = element_text(vjust = -15),
-      axis.title.x = element_text(vjust=-3)
+      axis.title.x = element_text(vjust=-3),
+      axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))
     )
 }
 
@@ -173,7 +174,7 @@ map_abbr_to_logo <- function(abbr_column) {
   map_chr(abbr_column,
           ~ web_image(
             url = get_team_logo(.),
-            height = 40
+            height = 100
           ) 
   )
 }
@@ -274,7 +275,7 @@ taxpayers %>% gt() %>%
   tab_style(
     locations = cells_title(groups="title"),
     style = list(
-      cell_text(weight="bold", size="24")
+      cell_text(weight="bold", size="36")
     )
   ) %>%
   tab_style(
@@ -309,9 +310,69 @@ taxpayers %>% gt() %>%
     #Reduce the height of rows
     data_row.padding = px(3),
     #Adjust font sizes and alignment
-    source_notes.font.size = 12,
+    table.font.size = 34,
+    source_notes.font.size = 16,
     heading.align = "left"
   ) %>%
-  gtsave(filename = 'taxpayers_18_22.png', vwidth = 1500, vheight = 1000)
+  gtsave(filename = 'taxpayers_18_22.png')
 
+
+years = 2022:2023
+gsw_overage_without = 32000000
+gsw_tax_rate_without = get_rate(TRUE, gsw_overage_without)
+wiseman = c(9603360, 12119440)
+payton = c(8300000, 8715000)
+wiseman_tax = gsw_tax_rate_without*wiseman
+payton_tax = gsw_tax_rate_without*payton
+df <- data.frame(years, wiseman, payton, wiseman_tax, payton_tax)
+df$years <- as.factor(df$years)
+colors <- c("G. Payton Salary" = "#adbce6", "G. Payton Tax" = "blue", "J. Wiseman Salary" = "#FFCCCB", "J. Wiseman Tax" = "red")
+df %>% ggplot() + 
+  geom_line(aes(x = years, y = payton, group=1, color = "G. Payton Salary")) +
+  geom_line(aes(x = years, y = payton_tax, group=1, color = "G. Payton Tax")) +
+  geom_line(aes(x = years, y = wiseman, group=1, color = "J. Wiseman Salary")) +
+  geom_line(aes(x = years, y = wiseman_tax, group=1, color = "J. Wiseman Tax")) +
+  labs(
+    x = "Season", 
+    y = "Tax Bill for Player",
+    title = "Wiseman vs Payton Salary and Tax Obligation", 
+    subtitle = "GSW tax cost of the remainder of their current contracts",
+    caption = "Calculation logic from CBAFAQ.com"
+  ) +
+  scale_y_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) + #millions
+  scale_color_manual(values=colors) +
+  theme_bw() + 
+  theme(
+    plot.margin = unit(c(1, 1, 3, 1), "lines"), 
+    plot.caption = element_text(vjust = -15),
+    axis.title.x = element_text(vjust=-3),
+    legend.title = element_blank()
+  )
+  
+
+years_cap <- c('2020-21', '2021-22', '2022-23')
+tax <- c(132627000, 136606000, 150267000)
+cap <- c(109140000, 112414000, 123655000)
+colors_cap <- c("Luxury Tax" = "Red", "Salary Cap" = "blue")
+data <- data.frame(years_cap, tax, cap)
+data %>% ggplot() + 
+  geom_line(aes(x = years_cap, y = tax, group = 1, color = 'Luxury Tax')) +
+  geom_line(aes(x = years_cap, y = cap, group = 1, color = 'Salary Cap')) +
+  labs( 
+    x = "Season", 
+    y = "Tax Level and Salary Cap",
+    title = "The Tax Moves in Lockstep with the Cap", 
+    subtitle = "Looking at salary cap and luxury tax levels in the last three seasons.",
+    caption = "Data from Spotrac. Visualization by JJ Kampf."
+  ) +
+  scale_y_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) + #millions
+  scale_color_manual(values=colors_cap) +
+  theme_bw() + 
+  theme(
+    plot.margin = unit(c(1, 1, 3, 1), "lines"), 
+    plot.caption = element_text(vjust = -15),
+    axis.title.x = element_text(vjust=-3),
+    legend.title = element_blank(),
+    axis.title.y = element_text(margin = margin(t = 0, r = 30, b = 0, l = 0))
+  )
 
