@@ -145,7 +145,7 @@ compare_wiseman_payton_tax <- function() {
   payton_tax = gsw_tax_rate_without*payton
   df <- data.frame(years, wiseman, payton, wiseman_tax, payton_tax)
   df$years <- as.factor(df$years)
-  colors <- c("G. Payton Salary" = "#adbce6", "G. Payton Tax" = "blue", "J. Wiseman Salary" = "#FFCCCB", "J. Wiseman Tax" = "red")
+  colors <- c("G. Payton Salary" = "black", "G. Payton Tax" = "blue", "J. Wiseman Salary" = "gray", "J. Wiseman Tax" = "red")
   df %>% ggplot() + 
     geom_line(aes(x = years, y = payton, group=1, color = "G. Payton Salary")) +
     geom_line(aes(x = years, y = payton_tax, group=1, color = "G. Payton Tax")) +
@@ -155,8 +155,8 @@ compare_wiseman_payton_tax <- function() {
       x = "Season", 
       y = "Tax Bill for Player",
       title = "Wiseman vs Payton Salary and Tax Obligation", 
-      subtitle = "GSW tax cost of the remainder of their current contracts",
-      caption = "Calculation logic from CBAFAQ.com"
+      subtitle = "GSW tax cost of the remainder of their current contracts.",
+      caption = "Calculation logic from CBAFAQ.com. Visualization by JJ Kampf."
     ) +
     scale_y_continuous(labels = label_number(prefix = "$", suffix = " M", scale = 1e-6)) + #millions
     scale_color_manual(values=colors) +
@@ -165,9 +165,10 @@ compare_wiseman_payton_tax <- function() {
       plot.margin = unit(c(1, 1, 3, 1), "lines"), 
       plot.caption = element_text(vjust = -15),
       axis.title.x = element_text(vjust=-3),
-      legend.title = element_blank()
-    ) %>%
-    ggsave(filename = "payton_v_wiseman.png")
+      legend.title = element_blank(),
+      axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))
+    )
+  ggsave(filename = "payton_v_wiseman.png")
 }
 
 plot_tax_and_cap <- function() {
@@ -265,9 +266,9 @@ res %>%
   gt() %>%
   tab_header(
     title= md("Team Historic Payrolls"), 
-    subtitle = md("Full active payrolls for each team over the past four seasons.")
+    subtitle = md("Full active payrolls for each team over the past five seasons.")
   ) %>%
-  tab_source_note(source_note = md("Data from Spotrac.")) %>%
+  tab_source_note(source_note = md("Data from Spotrac. Table by JJ Kampf.")) %>%
   cols_align(
     align = 'left', 
     columns=everything()
@@ -285,6 +286,13 @@ res %>%
       cell_text(weight = "bold")
     )
   ) %>% 
+  tab_style(
+    locations = cells_body(
+      columns = everything(),
+      rows = everything()
+    ),
+    style = cell_borders(sides = "all", color = "#000000", style = "solid", weight = px(1))
+  ) %>%
   text_transform(
     locations=cells_body(c(`Team`)),
     fn=function(x) {
@@ -295,19 +303,21 @@ res %>%
     #Remove border between column headers and title
     column_labels.border.top.width = px(3),
     column_labels.border.top.color = "transparent",
+    table.margin.right = px(10),
+    table.margin.left = px(10),
     #Remove border around table
     table.border.top.color = "transparent",
     table.border.bottom.color = "transparent",
-    table.width = pct(110),
+    table.width = pct(100),
     row_group.font.weight = "bold",
     #Reduce the height of rows
     data_row.padding = px(3),
     #Adjust font sizes and alignment
     table.font.size = 34,
-    source_notes.font.size = 16,
+    source_notes.font.size = 30,
     heading.align = "left"
   ) %>%
-  gtsave(filename = "payrolls_18_22.png")
+  gtsave(filename = "payrolls_18_22.png", vwidth = 1400, vheight = 850)
 
 
 # Convert dollar strings to numeric values.
@@ -330,9 +340,9 @@ taxpayers <- res %>%
 taxpayers %>% gt() %>%
   tab_header(
     title= md("Repeat tax offenders"), 
-    subtitle = md("Teams who exceeded the tax 3 out of the four past seasons will be repeat offenders for accounting purposes this season.")
+    subtitle = md("*Yes* in 3 out of the last 4 seasons (2018-2021 inclusive).")
   ) %>%
-  tab_source_note(source_note = md("Data from Spotrac.")) %>%
+  tab_source_note(source_note = md("Data from Spotrac. Table by JJ Kampf")) %>%
   cols_align(
     align = 'left', 
     columns=everything()
@@ -353,6 +363,13 @@ taxpayers %>% gt() %>%
       cell_text(weight = "bold")
     )
   ) %>% 
+  tab_style(
+    locations = cells_body(
+      columns = everything(),
+      rows = everything()
+    ),
+    style = cell_borders(sides = "all", color = "#000000", style = "solid", weight = px(1))
+  ) %>%
   text_transform(
     locations=cells_body(c(`Team`)),
     fn=function(x) {
@@ -379,10 +396,10 @@ taxpayers %>% gt() %>%
     data_row.padding = px(3),
     #Adjust font sizes and alignment
     table.font.size = 34,
-    source_notes.font.size = 16,
+    source_notes.font.size = 30,
     heading.align = "left"
   ) %>%
-  gtsave(filename = 'taxpayers_18_22.png')
+  gtsave(filename = 'taxpayers_18_22.png', vwidth = 900, vheight = 850)
 
 
 
